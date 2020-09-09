@@ -24,6 +24,11 @@ export class lunrIndexer {
     build() {
         this.builder.build();
     };
+
+    search(query) {
+        console.log(this.index);
+        this.builder.search(query); //this.index
+    }
 };
 
 
@@ -34,7 +39,7 @@ export class redisIndexer {
         this.md_index = "md_index";
 
         const client = redis.createClient(REDIS_PORT, REDIS_HOST);
-        ['ft.create', 'ft.add', 'ft.search', 'ft.drop', 'ft.info']
+        ['ft.create', 'ft.add', 'ft.search', 'ft.drop', 'ft.info', 'scan']
         .forEach(redis.add_command);
 
         this.ft_create = promisify(client.ft_create).bind(client);
@@ -42,6 +47,7 @@ export class redisIndexer {
         this.ft_search = promisify(client.ft_search).bind(client);
         this.ft_drop = promisify(client.ft_drop).bind(client);
         this.ft_info = promisify(client.ft_info).bind(client);
+        this.scan = promisify(client.scan).bind(client);
 
         this.client_check = (async() => {
             try {
@@ -119,8 +125,40 @@ export class redisIndexer {
         () => {};
     };
 
-    /*
-    search(){
-    }
-    */
+    async search(query) {
+        let search_results;
+        try {
+            let search_results = await this.ft_search(
+                this.md_index,
+                query
+            );
+        } catch (err) {
+            if (String(err).includes('ERR unknown command `ft.search`')) {
+                process.exitCode = 9;
+            } else if (String(err).includes('no such index')) {
+                () => {};
+            } else {
+                throw err;
+            }
+        }
+        // should return an id
+        //return search_results // returns object
+        let cursor = 0;
+        let matches = [];
+        do {
+            let scan_matches = await scan(cursor, 'MATCH', 'ft:md_index:*'); //arguments
+            cursor = scan_matches[0];
+            if (scan_matches[1]) {
+                matches = matches.concat(scan_matches[1])
+            }
+        } while (cursor !== '0');
+        /*
+        return Promise.all(
+            matches
+        )
+        */
+        //should return a list of matches  and their id
+        return console.log(all_matches);
+    };
+
 };

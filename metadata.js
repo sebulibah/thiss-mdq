@@ -1,5 +1,5 @@
-import {lunrIndexer, redisIndexer} from "./search-index";
-import {esc_query, touchp} from "./utils";
+import { lunrIndexer, redisIndexer } from "./search-index";
+import { esc_query, touchp } from "./utils";
 const fs = require('fs');
 const chokidar = require('chokidar');
 const Chain = require('stream-chain');
@@ -46,7 +46,7 @@ class Metadata {
                         "title": e.title.toLocaleLowerCase(locales),
                     };
                     if (e.scope) {
-                        doc.tags = e.scope.split(",").map(function (scope) {
+                        doc.tags = e.scope.split(",").map(function(scope) {
                             let parts = scope.split('.');
                             return parts.slice(0, -1);
                         }).join(' ');
@@ -57,10 +57,11 @@ class Metadata {
                 self.db[e.id] = e;
                 ++self.count;
             }]);
-            self._p.on('data', () => {
-            });
+            self._p.on('data', () => {});
             self._p.on('end', () => {
                 this.idx.build();
+                console.log(this.cb.length); //
+                console.log(this.cb.name); //
                 console.log(`loaded ${self.count} objects`);
                 if (self.cb) {
                     self.cb(undefined, self)
@@ -95,12 +96,13 @@ class Metadata {
             }
             q = esc_query(q)
             let str = q.split(/\s+/).filter(x => !drop.includes(x));
-            let matches = [str.map(x => "+" + x).join(' '), str.map(x => "+" + x + "*").join(' ')];
+            let matches = [str.map(x => "+" + x).join(' '), str.map(x => "+" + x + "*").join(' ')]; //have different options for redis
             console.log(matches);
             let results = {};
-            for (let i = 0; i < matches.length; i++) {
+            for (let i = 0; i < matches.length; i++) { //move this to individual search
                 let match = matches[i];
-                self.index.search(match).forEach(function(m) {
+                //self.index.search(match).forEach(function(m) {
+                this.idx.search(match).forEach(function(m) {
                     console.log(`${match} -> ${m.ref}`);
                     if (!results[m.ref]) {
                         results[m.ref] = self.lookup(m.ref);
@@ -118,7 +120,7 @@ class Metadata {
 function load_metadata(metadata_file, reload_on_change, cb) {
     let md = new Metadata(metadata_file, cb);
     if (reload_on_change) {
-        chokidar.watch(metadata_file, {awaitWriteFinish: true}).on('change', (path, stats) => {
+        chokidar.watch(metadata_file, { awaitWriteFinish: true }).on('change', (path, stats) => {
             console.log(`${metadata_file} change detected ... reloading`);
             let md_new = new Metadata(metadata_file, cb);
         });

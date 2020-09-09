@@ -30,10 +30,10 @@ app.get('/entities/?', cors(), function(req, res) {
     res.contentType('json');
     res.append("Cache-Control", CONTENT_CACHE_HEADER)
     let format = new ArrayFormatter();
-    stream(app.locals.md.search(q, res)).pipe(format).pipe(res);
+    stream(app.locals.md.search(q, res)).pipe(format).pipe(res); //change this
 });
 
-app.get('/entities/:path', cors(), function(req, res) {
+app.get('/entities/:path', cors(), function(req, res) { //this is what's executing
     let id = req.params.path.split('.');
     let entity = app.locals.md.lookup(id[0]);
     if (entity) {
