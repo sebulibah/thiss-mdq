@@ -99,13 +99,15 @@ class Metadata {
             let results = {};
             for (let i = 0; i < matches.length; i++) {
                 let match = matches[i];
-                //self.index.search(match).forEach(function(m) { 
-                this.idx.search(match).forEach(function(m) {
-                    console.log(`${match} -> ${m.ref}`); //match  -> match id
-                    if (!results[m.ref]) {
-                        results[m.ref] = self.lookup(m.ref);
-                    }
-                });
+                let results = this.idx.search(match); //array of search objects
+                for (result in results) {
+                    ((m) => {
+                        console.log(`${match} -> ${m.ref}`);
+                        if (!results[m.ref]) {
+                            results[m.ref] = self.lookup(m.ref);
+                        };
+                    })();
+                };
             }
             return Object.values(results);
         } else {

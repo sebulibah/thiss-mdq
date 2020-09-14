@@ -7,11 +7,11 @@ const REDIS_HOST = process.env.REDIS_HOST || "0.0.0.0";
 // TODO: Add more configuration options for redis
 
 
-// lunrjs indexer
 export class lunrIndexer {
     constructor() {
         this.builder = new lunr.Builder();
         this.builder.pipeline.remove(lunr.trimmer);
+        //this.builder.ref('id');
         this.builder.field('title');
         this.builder.field('tags');
         this.builder.field('scopes');
@@ -22,17 +22,17 @@ export class lunrIndexer {
     };
 
     build() {
-        this.builder.build();
+        return this.builder.build(); //returns lunr.Index
     };
 
     search(query) {
-        console.log(this.index);
-        this.builder.search(query); //this.index
-    }
+        let index = lunr.Index.load(); //load index
+        return index.search(query);
+    };
+
 };
 
 
-// Redisearch indexer
 export class redisIndexer {
     constructor() {
         let self = this;
@@ -47,7 +47,6 @@ export class redisIndexer {
         this.ft_search = promisify(client.ft_search).bind(client);
         this.ft_drop = promisify(client.ft_drop).bind(client);
         this.ft_info = promisify(client.ft_info).bind(client); // not asynchronous
-        this.scan = promisify(client.scan).bind(client);
 
         this.client_check = (async() => {
             try {
@@ -126,19 +125,15 @@ export class redisIndexer {
     };
 
     async search(query) {
-        //search a query and return the corresponding document id
-        let matches = [];
-        let results = {};
+        let results = [];
         let search_results = await this.ft_search(this.md_index, query);
-
-        for (let i = 1; i < search_results.length; i += 2) {
-            results.ref = search_results[i];
-        }
-        matches.push(results);
-        console.log(matches);
-        return matches;
-
+        for (var i = 0; i < search_results.length; i++) {
+            if (typeof(search_results[i]) == "string") {
+                results.push({ ref: search_results[i] });
+            };
+        };
+        //return all matches here and call lookup in metadata.js?
+        return results;
     };
 
-    //return a dictionary
 };
