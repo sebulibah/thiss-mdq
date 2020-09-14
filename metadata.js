@@ -60,8 +60,6 @@ class Metadata {
             self._p.on('data', () => {});
             self._p.on('end', () => {
                 this.idx.build();
-                console.log(this.cb.length); //
-                console.log(this.cb.name); //
                 console.log(`loaded ${self.count} objects`);
                 if (self.cb) {
                     self.cb(undefined, self)
@@ -96,14 +94,14 @@ class Metadata {
             }
             q = esc_query(q)
             let str = q.split(/\s+/).filter(x => !drop.includes(x));
-            let matches = [str.map(x => "+" + x).join(' '), str.map(x => "+" + x + "*").join(' ')]; //have different options for redis
+            let matches = [str.map(x => "+" + x).join(' '), str.map(x => "+" + x + "*").join(' ')];
             console.log(matches);
             let results = {};
-            for (let i = 0; i < matches.length; i++) { //move this to individual search
+            for (let i = 0; i < matches.length; i++) {
                 let match = matches[i];
-                //self.index.search(match).forEach(function(m) {
+                //self.index.search(match).forEach(function(m) { 
                 this.idx.search(match).forEach(function(m) {
-                    console.log(`${match} -> ${m.ref}`);
+                    console.log(`${match} -> ${m.ref}`); //match  -> match id
                     if (!results[m.ref]) {
                         results[m.ref] = self.lookup(m.ref);
                     }

@@ -46,7 +46,7 @@ export class redisIndexer {
         this.ft_add = promisify(client.ft_add).bind(client);
         this.ft_search = promisify(client.ft_search).bind(client);
         this.ft_drop = promisify(client.ft_drop).bind(client);
-        this.ft_info = promisify(client.ft_info).bind(client);
+        this.ft_info = promisify(client.ft_info).bind(client); // not asynchronous
         this.scan = promisify(client.scan).bind(client);
 
         this.client_check = (async() => {
@@ -126,39 +126,19 @@ export class redisIndexer {
     };
 
     async search(query) {
-        let search_results;
-        try {
-            let search_results = await this.ft_search(
-                this.md_index,
-                query
-            );
-        } catch (err) {
-            if (String(err).includes('ERR unknown command `ft.search`')) {
-                process.exitCode = 9;
-            } else if (String(err).includes('no such index')) {
-                () => {};
-            } else {
-                throw err;
-            }
-        }
-        // should return an id
-        //return search_results // returns object
-        let cursor = 0;
+        //search a query and return the corresponding document id
         let matches = [];
-        do {
-            let scan_matches = await scan(cursor, 'MATCH', 'ft:md_index:*'); //arguments
-            cursor = scan_matches[0];
-            if (scan_matches[1]) {
-                matches = matches.concat(scan_matches[1])
-            }
-        } while (cursor !== '0');
-        /*
-        return Promise.all(
-            matches
-        )
-        */
-        //should return a list of matches  and their id
-        return console.log(all_matches);
+        let results = {};
+        let search_results = await this.ft_search(this.md_index, query);
+
+        for (let i = 1; i < search_results.length; i += 2) {
+            results.ref = search_results[i];
+        }
+        matches.push(results);
+        console.log(matches);
+        return matches;
+
     };
 
+    //return a dictionary
 };
