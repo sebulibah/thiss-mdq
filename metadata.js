@@ -99,17 +99,16 @@ class Metadata {
             let results = {};
             for (let i = 0; i < matches.length; i++) {
                 let match = matches[i];
-                let results = this.idx.search(match); //array of search objects
-                for (result in results) {
-                    ((m) => {
-                        console.log(`${match} -> ${m.ref}`);
-                        if (!results[m.ref]) {
-                            results[m.ref] = self.lookup(m.ref);
-                        };
-                    })();
+                let search_results = this.idx.search(match); //array of search_results objects
+                for (result in search_results) {
+                    //console.log(`${match} -> ${m.ref}`);
+                    console.log(`${match} -> ${result.ref}`);
+                    if (!results[m.ref]) {
+                        results[m.ref] = self.lookup(m.ref);
+                    };
                 };
-            }
-            return Object.values(results);
+            };
+            return Object.values(results); //empty
         } else {
             res.append("Surrogate-Key", "entities");
             return Object.values(self.db);
