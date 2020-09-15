@@ -132,17 +132,7 @@ export class redisIndexer {
                 results.push({ ref: search_results[i] });
             };
         };
-        //return all matches here and call lookup in metadata.js?
-
-        /*
-        query = university of luxembourg
-        results = [ { ref: '{sha1}128c345f29cb276297feffcce682eed56db6b4d0' },
-                    { ref: '{sha1}ff57646bf746581a4be30b0b31e4af4f8e61ceb6' } ]
-                    [ { ref: '{sha1}128c345f29cb276297feffcce682eed56db6b4d0' },
-                    { ref: '{sha1}ff57646bf746581a4be30b0b31e4af4f8e61ceb6' }
-                ]
-        correspond to documents with univeristy
-        */
+        console.log(results);
         return results;
     };
 

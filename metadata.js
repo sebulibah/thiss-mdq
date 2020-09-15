@@ -95,20 +95,18 @@ class Metadata {
             q = esc_query(q)
             let str = q.split(/\s+/).filter(x => !drop.includes(x));
             let matches = [str.map(x => "+" + x).join(' '), str.map(x => "+" + x + "*").join(' ')];
-            console.log(matches);
+            console.log(matches); // [ '+university +luxembourg', '+university* +luxembourg*' ]
             let results = {};
-            for (let i = 0; i < matches.length; i++) {
-                let match = matches[i];
-                let search_results = this.idx.search(match); //array of search_results objects
-                for (result in search_results) {
-                    //console.log(`${match} -> ${m.ref}`);
-                    console.log(`${match} -> ${result.ref}`);
+            for (let i = 0; i < matches.length; i++) { // 2
+                let match = matches[i]; // '+university +luxembourg'
+                this.idx.search(match).forEach(function(m) { // [ { ref: '{sha1}128c345f29cb276297feffcce682eed56db6b4d0' },{ ref: '{sha1}ff57646bf746581a4be30b0b31e4af4f8e61ceb6' } ]
+                    console.log(`${match} -> ${m.ref}`);
                     if (!results[m.ref]) {
                         results[m.ref] = self.lookup(m.ref);
-                    };
-                };
+                    }
+                });
             };
-            return Object.values(results); //empty
+            return Object.values(results);
         } else {
             res.append("Surrogate-Key", "entities");
             return Object.values(self.db);
