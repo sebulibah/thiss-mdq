@@ -34,21 +34,21 @@ export class lunrIndexer {
 
 export class redisIndexer {
     constructor() {
-        this.md_index = "md_index";
-
         const client = redis.createClient(REDIS_PORT, REDIS_HOST);
-        this.index = rediSearch(client, this.md_index);
-        this.index.dropIndex((err) => {
-            if (err) { throw err; };
-        });
 
+        this.index = rediSearch(client, "md_index");
+        this.index.dropIndex((err) => {
+            if (err) {
+                console.error(err);
+            };
+        });
         this.index.createIndex([
                 this.index.fieldDefinition.text("title", true),
                 this.index.fieldDefinition.text("tags", true),
                 this.index.fieldDefinition.text("scopes", true)
             ],
             (err) => {
-                if (err) { throw err; }
+                if (err) { throw err; };
             });
     };
 
@@ -72,10 +72,10 @@ export class redisIndexer {
             }, {
                 score: 1
             },
-            function(err) {
-                if (err) { throw err; }
+            (err) => {
+                if (err) { throw err; };
             });
-    }
+    };
 
     build() {
         () => {};
@@ -83,14 +83,23 @@ export class redisIndexer {
 
     search(q) {
         this.index.search(
-            q, { offset: 0 },
-            function(err, results) {
-                if (err) {
-                    throw err;
+            q, {}, (err, results) => {
+                if (String(err).includes('Syntax error at offset')) {
+                    () => {};
+                } else if (err) {
+                    console.error(err);
                 } else {
-                    () => {}
-                }
-            }
-        )
+                    if (results.results.length > 0) {
+                        var matches = [];
+                        results.results.map(obj => {
+                            matches.push({ ref: obj.docId, doc: obj.doc });
+                        });
+                    };
+                    console.log(matches);
+                    return matches;
+                };
+            });
+
+        console.log(matches);
     };
 };
