@@ -8,7 +8,6 @@ const REDIS_PORT = process.env.REDIS_PORT || 6379;
 const REDIS_HOST = process.env.REDIS_HOST || "0.0.0.0";
 // TODO: Add more configuration options for redis
 
-
 export class lunrIndexer {
     constructor() {
         this.builder = new lunr.Builder();
@@ -82,24 +81,25 @@ export class redisIndexer {
     };
 
     search(q) {
-        this.index.search(
-            q, {}, (err, results) => {
-                if (String(err).includes('Syntax error at offset')) {
-                    () => {};
-                } else if (err) {
-                    console.error(err);
-                } else {
-                    if (results.results.length > 0) {
-                        var matches = [];
-                        results.results.map(obj => {
-                            matches.push({ ref: obj.docId, doc: obj.doc });
-                        });
+        let getSearch = () => {
+            var matches = [];
+            this.index.search(
+                q, {}, (err, results) => {
+                    if (String(err).includes('Syntax error at offset')) {
+                        () => {};
+                    } else if (err) {
+                        console.error(err);
+                    } else {
+                        if (results.results.length > 0) {
+                            results.results.map(obj => {
+                                matches.push({ ref: obj.docId, doc: obj.doc });
+                            });
+                        };
                     };
-                    console.log(matches);
-                    return matches;
-                };
-            });
-
-        console.log(matches);
+                });
+            console.log(matches) //empty
+            return matches;
+        };
+        return getSearch();
     };
 };
