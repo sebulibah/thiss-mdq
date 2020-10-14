@@ -7,13 +7,15 @@ const parser = require('stream-json');
 const StreamArray = require('stream-json/streamers/StreamArray');
 const hex_sha1 = require('./sha1.js');
 const util = require('util');
+const sw = require('stopword');
 
 function _sha1_id(s) {
     return "{sha1}" + hex_sha1(s);
 }
 
 let locales = ["sv-SE", "en-US"];
-const drop = ['a', 'the', 'of', 'in', 'i', 'av', 'af', 'den', 'le', 'la', 'les', 'si', 'de', 'des', 'los'];
+const institution_words = ['university','school','institute','college','institute'];
+let all_stopwords = [...sw.en, ...sw.sv, ...sw.fi, ...sw.no, ...sw.fr, ...sw.de, ...institution_words]
 
 const INDEXER = process.env.INDEXER || 'lunr';
 
@@ -59,8 +61,7 @@ class Metadata {
                     }
                     doc.title = [...new Set(doc.title)].sort()
                     doc.scopes = [...new Set(doc.scopes)].sort()
-
-                    console.log(doc);
+                    //console.log(doc)
                     this.idx.add(doc);
                 }
                 self.db[e.id] = e;
@@ -103,18 +104,18 @@ class Metadata {
                 q = q.substring(ati + 1);
             }
             q = esc_query(q)
-            let str = q.split(/\s+/).filter(x => !drop.includes(x));
+            let tokens = q.split(/\s+/);
+            let str = [tokens[0]]
+            str.push(...sw.removeStopwords(tokens.slice(1), all_stopwords))
             let matches = [
                 str.map(x => "+" + x).join(' '),
                 str.map(x => "+" + x + "*").join(' '),
-                str.map(x => "*" + x + "*").join(' ')
             ];
-            console.log(matches);
             let results = {};
             for (let i = 0; i < matches.length; i++) {
                 let match = matches[i];
                 self.idx.search(match).forEach(function(m) {
-                    console.log(`${match} -> ${m.ref}`);
+                    //console.log(`${match} -> ${m.ref}`);
                     if (!results[m.ref]) {
                         results[m.ref] = self.lookup(m.ref);
                     }
