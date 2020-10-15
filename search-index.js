@@ -4,7 +4,7 @@ const rediSearchBindings = require('redis-redisearch');
 const rediSearch = require('redisearchclient');
 rediSearchBindings(redis);
 
-const REDIS_PORT = process.env.REDIS_PORT || 6379;
+const REDIS_PORT = parseInt(process.env.REDIS_PORT) || 6379;
 const REDIS_HOST = process.env.REDIS_HOST || "0.0.0.0";
 // TODO: Add more configuration options for redis
 
@@ -34,7 +34,9 @@ export class lunrIndexer {
 
 export class redisIndexer {
     constructor() {
-        const client = redis.createClient(REDIS_PORT, REDIS_HOST);
+        const client = redis.createClient(
+            REDIS_PORT, REDIS_HOST
+        );
 
         this.index = rediSearch(client, "md_index");
         this.index.dropIndex((err) => {
