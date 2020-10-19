@@ -34,14 +34,17 @@ export class lunrIndexer {
 
 export class redisIndexer {
     constructor() {
-        const client = redis.createClient(
+        this.client = redis.createClient(
             REDIS_PORT, REDIS_HOST
         );
 
-        this.index = rediSearch(client, "md_index");
+        redis.add_command('xadd');
+        redis.add_command('xread');
+
+        this.index = rediSearch(this.client, "md_index");
         this.index.dropIndex((err) => {
             if (err) {
-                console.error(err);
+                () => {};
             };
         });
         this.index.createIndex([
@@ -55,6 +58,7 @@ export class redisIndexer {
     };
 
     async add(doc) {
+        //tokenizer
         if (typeof(doc.tags) == "undefined") {
             doc.tags = "";
         } else {
@@ -72,7 +76,7 @@ export class redisIndexer {
                 tags: doc.tags,
                 scopes: doc.scopes
             }, {
-                score: 1
+                score: 1,
             },
             (err) => {
                 if (err) { throw err; };
@@ -84,8 +88,8 @@ export class redisIndexer {
     };
 
     search(q) {
-        let getSearch = () => {
-            var matches = [];
+        var matches = [];
+        (() => {
             this.index.search(
                 q, {}, (err, results) => {
                     if (String(err).includes('Syntax error at offset')) {
@@ -97,12 +101,13 @@ export class redisIndexer {
                             results.results.map(obj => {
                                 matches.push({ ref: obj.docId, doc: obj.doc });
                             });
+                            console.log(matches);
+                            return matches;
                         };
                     };
                 });
-            console.log(matches) //empty
-            return matches;
-        };
-        return getSearch();
+        })();
+
+
     };
 };
