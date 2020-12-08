@@ -16,6 +16,9 @@ export class lunrIndexer {
         this.builder.field('title');
         this.builder.field('tags');
         this.builder.field('scopes');
+        this.builder.field('keywords');
+
+        lunr.tokenizer.separator = /\s+/;
     };
 
     add(doc) {
@@ -86,6 +89,7 @@ export class redisIndexer {
     build() {
         () => {};
     };
+
 
     search(q) {
         var matches = [];

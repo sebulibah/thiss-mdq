@@ -27,7 +27,6 @@ class Metadata {
             this.file = file;
             this.cb = cb;
             this.db = {};
-            this.last_updated = new Date();
             this.count = 0;
 
             if (INDEXER === "redis") {
@@ -47,6 +46,9 @@ class Metadata {
                         "id": e.id,
                         "title": [e.title.toLocaleLowerCase(locales)],
                     };
+                    if (e.keywords) {
+                        doc.keywords = e.keywords.toLocaleLowerCase(locales).split(",").map(e=>e.trim())
+                    }
                     if (e.title_langs) {
                         doc.title.push(...Object.entries(e.title_langs).map((kv,i) => {
                             return kv[1].toLocaleLowerCase(locales).trim();
@@ -85,19 +87,11 @@ class Metadata {
         return this.db[id];
     }
 
-    triggerReload(interval) {
-        setTimeout(() => {
-            touchp(self.file).then(() => {
-                self.triggerReload(interval);
-            });
-        }, interval);
-    }
-
     search(q, res) {
         let self = this;
 
         if (q) {
-            res.append("Surrogate-Key", `q q-${q}`);
+            res.append("Surrogate-Key", `query`);
             q = q.toLocaleLowerCase(locales);
             let ati = q.indexOf('@');
             if (ati > -1) {
@@ -129,15 +123,8 @@ class Metadata {
     }
 }
 
-function load_metadata(metadata_file, reload_on_change, cb) {
-    let md = new Metadata(metadata_file, cb);
-    if (reload_on_change) {
-        chokidar.watch(metadata_file, {awaitWriteFinish: true}).on('change', (path, stats) => {
-            console.log(`${metadata_file} change detected ... reloading`);
-            let md_new = new Metadata(metadata_file, cb);
-        });
-    }
-    return md;
+function load_metadata(metadata_file, cb) {
+    return new Metadata(metadata_file, cb);
 }
 
 module.exports = util.promisify(load_metadata);

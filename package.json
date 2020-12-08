@@ -1,6 +1,6 @@
 {
   "name": "thiss-mdq",
-  "version": "1.2.6",
+  "version": "1.3.2",
   "description": "A minimal JSON-only MDQ",
   "main": "index.js",
   "homepage": "https://github.com/TheIdentitySelector/thiss-mdq",
@@ -38,6 +38,7 @@
     "@babel/polyfill": "^7.10.4",
     "@babel/preset-env": "^7.11.0",
     "@babel/register": "^7.10.5",
+    "compression": "^1.7.4",
     "core-js": "^2.6.5",
     "cors": "^2.8.5",
     "express": "^4.17.1",

@@ -2,14 +2,19 @@ const express = require('express');
 import { ArrayFormatter } from "./utils";
 const Stream = require('stream');
 const cors = require('cors');
+let compression = require('compression')
+const fsp = require("fs").promises;
 
 const CACHE_TIME = parseInt(process.env.CACHE_TIME) || 3600;
 const S_MAXAGE = parseInt(process.env.S_MAXAGE) || CACHE_TIME;
 const MAXAGE = parseInt(process.env.MAXAGE) || CACHE_TIME;
-const CONTENT_CACHE_HEADER = process.env.CONTENT_CACHE_HEADER || `s-maxage=${S_MAXAGE}, maxage=${MAXAGE}`;
+const CONTENT_CACHE_HEADER = process.env.CONTENT_CACHE_HEADER || `s-maxage=${S_MAXAGE}, max-age=${MAXAGE}`;
 const META_CACHE_HEADER = process.env.META_CACHE_HEADER || "private, no-store";
 
 const app = express();
+app.use(compression());
+
+const start_time = new Date();
 
 function stream(a) {
     const readable = new Stream.Readable();
@@ -18,11 +23,24 @@ function stream(a) {
     return readable;
 }
 
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
     const meta = require('./package.json');
     res.append("Surrogate-Key", "meta");
     res.append("Cache-Control", META_CACHE_HEADER)
-    return res.json({ 'version': meta.version, 'size': app.locals.md.count, 'last_updated': app.locals.md.last_updated });
+
+    fsp.stat(app.locals.md.file).then((stats) => {
+        return {
+            'last_modified': stats.mtime,
+            'last_created': stats.ctime,
+            'size': app.locals.md.count,
+        }
+    }).then(r => {
+        res.json({
+            'version': meta.version,
+            'start_time': start_time,
+            'metadata': r,
+        });
+    });
 });
 
 app.get('/entities/?', cors(), function(req, res) {
